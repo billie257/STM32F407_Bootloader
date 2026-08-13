@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.h": "c"
+    },
+    "files.exclude": {
+        "**/.DS_Store": true,
+        "**/.git": true,
+        "**/.hg": true,
+        "**/.svn": true,
+        "**/CVS": true,
+        "**/Thumbs.db": true
+    },
+    "files.encoding": "gbk",
+    "files.autoGuessEncoding": true
+}
