@@ -9,4 +9,5 @@ void board_lowlevel_init(void)
 
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, ENABLE);
 }

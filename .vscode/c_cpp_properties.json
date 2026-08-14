@@ -13,9 +13,11 @@
                 "HSE_VALUE=8000000"
             ],
             "includePath": [
-                "app",
+                "app/",
+                "app/crc",
                 "driver/bl_usart",
                 "driver/console",
+                "driver/tim_delay",
                 "firmware/cmsis/core",
                 "firmware/cmsis/device",
                 "firmware/driver/inc",

@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,HSE_VALUE=8000000</Define>
               <Undefine></Undefine>
-              <IncludePath>..\driver\bl_usart;..\driver\console;..\firmware\cmsis\core;..\firmware\cmsis\device;..\firmware\driver\inc;..\third_lib\ringbuffer</IncludePath>
+              <IncludePath>..\app;..\app\crc;..\driver\bl_usart;..\driver\console;..\driver\tim_delay;..\firmware\cmsis\core;..\firmware\cmsis\device;..\firmware\driver\inc;..\third_lib\ringbuffer</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -404,6 +404,26 @@
               <FileType>1</FileType>
               <FilePath>..\app\bootloader.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\app\stm32_flash.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>app/crc</GroupName>
+          <Files>
+            <File>
+              <FileName>crc16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\app\crc\crc16.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\app\crc\crc32.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -418,6 +438,11 @@
               <FileName>console.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\console\console.c</FilePath>
+            </File>
+            <File>
+              <FileName>tim_delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\tim_delay\tim_delay.c</FilePath>
             </File>
           </Files>
         </Group>
