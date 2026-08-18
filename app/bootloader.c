@@ -14,9 +14,10 @@
 #define BL_ADDRESS       0x08000000
 #define BL_SIZE          (48 * 1024)
 #define APP_VTOR_ADDR    0x08010000
-#define RX_BUFFER_SIZE   1024
+#define RX_BUFFER_SIZE   (5 * 1024) // PACKET_SIZE_MAX以上
 #define RX_TIMEOUT_MS    20
-#define PACKET_SIZE_MAX  4096
+#define PAYLOAD_SIZE_MAX  (4096 + 8) // 4096为Program最大数据长度，8为Program指令的地址(4)和长度(4)
+#define PACKET_SIZE_MAX  (4 + PAYLOAD_SIZE_MAX + 2) // header(1) + opcode(1) + length(2) + payload + crc16(2)
 
 typedef enum
 {
@@ -106,7 +107,7 @@ static void bl_opcode_inquery_handler(void)
         }
         case INQUERY_SUBCODE_MTU:
         {
-            uint8_t bmtu[2] = {PACKET_SIZE_MAX & 0xFF, (PACKET_SIZE_MAX >> 8) & 0xFF};
+            uint8_t bmtu[2] = {PAYLOAD_SIZE_MAX & 0xFF, (PAYLOAD_SIZE_MAX >> 8) & 0xFF};
             bl_response(PACKET_OPCODE_INQUERY, PACKET_ERRCODE_OK, (const uint8_t *)bmtu, sizeof(bmtu));
             break;
         }
@@ -307,7 +308,7 @@ static bool bl_byte_handler(uint8_t byte)
     }
     last_byte_ms = now_ms;
 
-    printf("recv: %02X\n", byte);
+    //printf("recv: %02X\n", byte);
 
     // 字节接收状态机处理
     packet_buffer[packet_index++] = byte;
@@ -321,6 +322,7 @@ static bool bl_byte_handler(uint8_t byte)
             }
             else
             {
+                printf("header error: %02X\n", packet_buffer[0]);
                 packet_index = 0;
                 packet_state = PACKET_STATE_HEADER;
             }
@@ -339,6 +341,7 @@ static bool bl_byte_handler(uint8_t byte)
                 }
             else
             {
+                printf("opcode error: %02X\n", packet_buffer[1]);
                 packet_index = 0;
                 packet_state = PACKET_STATE_HEADER;
             }
@@ -347,7 +350,7 @@ static bool bl_byte_handler(uint8_t byte)
             if (packet_index == 4)
             {
                 uint16_t payload_length = (packet_buffer[3] << 8) | packet_buffer[2];
-                if (payload_length <= PACKET_SIZE_MAX - 4)
+                if (payload_length <= PAYLOAD_SIZE_MAX - 4)
                 {
                     printf("length ok: %u\n", payload_length);
                     packet_payload_length = payload_length;
@@ -358,6 +361,7 @@ static bool bl_byte_handler(uint8_t byte)
                 }
                 else
                 {
+                    printf("length error: %u\n", payload_length);
                     packet_index = 0;
                     packet_state = PACKET_STATE_HEADER;
                 }
@@ -382,11 +386,11 @@ static bool bl_byte_handler(uint8_t byte)
                     full_packet = true;
                     printf("crc16 ok: %04X\n", crc);
                     printf("packet received: opcode=%02X, lenght=%u\n", packet_opcode, packet_payload_length);
-                    printf("payload: ");
-                    for (uint32_t i = 0; i < packet_payload_length; i++)
-                    {
-                        printf("%02X", packet_buffer[4 + i]);
-                    }
+                    // printf("payload: ");
+                    // for (uint32_t i = 0; i < packet_payload_length; i++)
+                    // {
+                    //     printf("%02X", packet_buffer[4 + i]);
+                    // }
                     printf("\n");
                 }
                 else
