@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,HSE_VALUE=8000000</Define>
               <Undefine></Undefine>
-              <IncludePath>..\app;..\app\crc;..\driver\bl_usart;..\driver\console;..\driver\tim_delay;..\firmware\cmsis\core;..\firmware\cmsis\device;..\firmware\driver\inc;..\third_lib\ringbuffer</IncludePath>
+              <IncludePath>..\app;..\app\crc;..\driver\led;..\driver\bl_usart;..\driver\console;..\driver\tim_delay;..\driver\key;..\firmware\cmsis\core;..\firmware\cmsis\device;..\firmware\driver\inc;..\third_lib\ringbuffer</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -409,6 +409,11 @@
               <FileType>1</FileType>
               <FilePath>..\app\stm32_flash.c</FilePath>
             </File>
+            <File>
+              <FileName>magic_header.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\app\magic_header.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -443,6 +448,16 @@
               <FileName>tim_delay.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\tim_delay\tim_delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\key\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\led\led.c</FilePath>
             </File>
           </Files>
         </Group>

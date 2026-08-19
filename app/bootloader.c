@@ -9,10 +9,13 @@
 #include "crc16.h"
 #include "crc32.h"
 #include "stm32_flash.h"
+#include "board.h"
+#include "magic_header.h"
 
 #define BL_VERSION       "0.0.1"
 #define BL_ADDRESS       0x08000000
 #define BL_SIZE          (48 * 1024)
+#define BOOT_DELAY       3000
 #define APP_VTOR_ADDR    0x08010000
 #define RX_BUFFER_SIZE   (5 * 1024) // PACKET_SIZE_MAXÒÔÉÏ
 #define RX_TIMEOUT_MS    20
@@ -64,6 +67,51 @@ static uint32_t packet_index;
 static packet_state_machine_t packet_state = PACKET_STATE_HEADER;
 static packet_opcode_t packet_opcode;
 static uint16_t packet_payload_length;
+
+static bool application_validata(void)
+{
+    if (!magic_header_validate())
+    {
+        printf("magic header invalid\n");
+        return false;
+    }
+
+    uint32_t addr = magic_header_get_address();
+    uint32_t size = magic_header_get_length();
+    uint32_t crc = magic_header_get_crc32();
+    uint32_t ccrc = crc32((uint8_t *)addr, size);
+    if (crc != ccrc)
+    {
+        printf("application crc error: expected %08X, got %08X\n", crc, ccrc);
+        return false;
+    }
+
+    return true;
+}
+
+static void boot_application(void)
+{
+    if (!application_validata())
+    {
+        printf("application validate failed, cannot boot\n");
+        return;
+    }
+
+    printf("booting application...\n");
+    tim_delay_ms(2);
+
+    led_off(led1);
+    TIM_DeInit(TIM6);
+    USART_DeInit(USART1);
+    USART_DeInit(USART3);
+    NVIC_DisableIRQ(TIM6_DAC_IRQn);
+    NVIC_DisableIRQ(USART1_IRQn);
+    NVIC_DisableIRQ(USART3_IRQn);
+
+    SCB->VTOR = APP_VTOR_ADDR;
+    extern void JumpApp(uint32_t base);
+    JumpApp(APP_VTOR_ADDR);
+}
 
 static void bl_response(packet_opcode_t opcode, packet_errcode_t errcode, const uint8_t *data, uint16_t length)
 {
@@ -250,18 +298,8 @@ static void bl_opcode_boot_handler(void)
 {
     printf("boot handler\n");
     bl_response(PACKET_OPCODE_BOOT, PACKET_ERRCODE_OK, NULL, 0);
-    printf("booting application...\n");
 
-    TIM_DeInit(TIM3);
-    USART_DeInit(USART1);
-    USART_DeInit(USART3);
-    NVIC_DisableIRQ(TIM3_IRQn);
-    NVIC_DisableIRQ(USART1_IRQn);
-    NVIC_DisableIRQ(USART3_IRQn);
-
-    SCB->VTOR = APP_VTOR_ADDR;
-    extern void JumpApp(uint32_t base);
-    JumpApp(APP_VTOR_ADDR);
+    boot_application();
 }
 
 static void bl_packet_handler(void)
@@ -413,6 +451,54 @@ static void bl_usart_rx_handler(const uint8_t *data, uint32_t length)
     rb_puts(rxrb, data, length);
 }
 
+static bool key_trap_check(void)
+{
+    for (uint32_t t = 0; t < BOOT_DELAY; t+=10)
+    {
+        tim_delay_ms(10);
+        if (!key_read(key2))
+            return false;
+    }
+    printf("key pressed, trap into boot\n");
+    return true;
+}
+
+bool magic_header_trap_boot(void)
+{
+    if (!magic_header_validate())
+    {
+        printf("magic header invalid, trap into boot\n");
+        return true;
+    }
+
+    if (!application_validata())
+    {
+        printf("application validate failed, trap into boot\n");
+        return true;
+    }
+
+    return false;
+}
+
+static void wait_key_release(void)
+{
+    while (key_read(key2))    
+        tim_delay_ms(10);
+}
+
+static bool key_press_check(void)
+{
+    if (!key_read(key2))
+        return false;
+
+    tim_delay_ms(10);
+    if (!key_read(key2))
+        return false;
+
+    return true;
+}
+
+
 void bootloader_main(void)
 {
     printf("Bootloader started.\n");
@@ -421,8 +507,30 @@ void bootloader_main(void)
     bl_usart_init();
     bl_usart_register_rx_callback(bl_usart_rx_handler);
 
+    key_init(key2);
+
+    bool trapboot = key_trap_check();
+    if (!trapboot)
+        trapboot = magic_header_trap_boot();
+
+    if (!trapboot)
+    {
+        boot_application();
+    }
+
+    led_init(led1);
+    led_on(led1);
+    wait_key_release();
+
     while (1)
     {
+        if (key_press_check())
+        {
+            printf("key pressed, rebooting...\n");
+            tim_delay_ms(2);
+            NVIC_SystemReset();
+        }
+
         if (!rb_empty(rxrb))
         {
             uint8_t byte;
@@ -432,7 +540,6 @@ void bootloader_main(void)
                 bl_packet_handler();
             }
         }
-        
     }
 }
 

@@ -18,6 +18,8 @@
                 "driver/bl_usart",
                 "driver/console",
                 "driver/tim_delay",
+                "driver/key",
+                "driver/led",
                 "firmware/cmsis/core",
                 "firmware/cmsis/device",
                 "firmware/driver/inc",
