@@ -388,7 +388,7 @@ static bool bl_byte_handler(uint8_t byte)
             if (packet_index == 4)
             {
                 uint16_t payload_length = (packet_buffer[3] << 8) | packet_buffer[2];
-                if (payload_length <= PAYLOAD_SIZE_MAX - 4)
+                if (payload_length <= PAYLOAD_SIZE_MAX)
                 {
                     printf("length ok: %u\n", payload_length);
                     packet_payload_length = payload_length;

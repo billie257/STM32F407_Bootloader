@@ -16,25 +16,20 @@ void board_lowlevel_init(void)
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, ENABLE);
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 }
 
-#define KEY_DEFINE(n, PORT, PIN, IRQn) \
+#define KEY_DEFINE(n, PORT, PIN) \
 static struct key_desc _key##n = \
 { \
     .port = GPIO##PORT, \
     .pin = GPIO_Pin_##PIN, \
     .pupd = GPIO_PuPd_DOWN, \
-    .exti_port_src = EXTI_PortSourceGPIO##PORT, \
-    .exti_pin_src = EXTI_PinSource##PIN, \
-    .exti_line = EXTI_Line##PIN, \
-    .irqn = IRQn, \
     .press_level = Bit_SET, \
 }; \
 key_desc_t key##n = &_key##n
-KEY_DEFINE(1, E, 4, EXTI4_IRQn);
-KEY_DEFINE(2, E, 3, EXTI3_IRQn);
+KEY_DEFINE(1, E, 4);
+KEY_DEFINE(2, E, 3);
 
 static struct led_desc _led1 =
 {

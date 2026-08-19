@@ -13,34 +13,11 @@ void key_init(key_desc_t key)
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_PuPd = key->pupd;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Medium_Speed;		  
-	
-	EXTI_InitTypeDef EXTI_InitStruct;
-	EXTI_StructInit(&EXTI_InitStruct);
-	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-	EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;
-	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-		
-	NVIC_InitTypeDef NVIC_InitStruct;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 5;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-			
-	// KEY init
 	GPIO_InitStruct.GPIO_Pin = key->pin;
-	GPIO_Init(key->port, &GPIO_InitStruct);
-	SYSCFG_EXTILineConfig(key->exti_port_src, key->exti_pin_src);
-	EXTI_InitStruct.EXTI_Line = key->exti_line;
-	EXTI_Init(&EXTI_InitStruct);
-	NVIC_InitStruct.NVIC_IRQChannel = key->irqn;
-	NVIC_Init(&NVIC_InitStruct);	
+	GPIO_Init(key->port, &GPIO_InitStruct);	
 }
 
 bool key_read(key_desc_t key)
 {
 	return GPIO_ReadInputDataBit(key->port, key->pin) == key->press_level;
-}
-
-void key_press_callback_register(key_desc_t key, key_func_t func)
-{
-	key->func = func; 
 }
