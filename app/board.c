@@ -24,8 +24,8 @@ static struct key_desc _key##n = \
 { \
     .port = GPIO##PORT, \
     .pin = GPIO_Pin_##PIN, \
-    .pupd = GPIO_PuPd_DOWN, \
-    .press_level = Bit_SET, \
+    .pupd = GPIO_PuPd_UP, \
+    .press_level = Bit_RESET, \
 }; \
 key_desc_t key##n = &_key##n
 KEY_DEFINE(1, E, 4);
