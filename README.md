@@ -2,6 +2,10 @@
 
 基于 STM32F407ZGTx（Cortex-M4）的串口 IAP Bootloader 工程，使用 Keil MDK（uVision5）+ ST 标准外设库（SPL）开发。Bootloader 通过自定义串口协议接收上位机指令，完成 Flash 擦除、写入、校验和跳转，实现应用固件的串口在线升级。
 
+<img src="assets/SerialUpgrader_write.jpg" alt="SerialUpgrader_write" style="zoom:50%;" />
+
+<img src="assets/日志打印.jpg" alt="日志打印" style="zoom:25%;" />
+
 ## 功能特性
 
 - 支持串口在线升级（IAP）：查询版本/MTU、擦除、编程、CRC32 校验、复位、跳转应用
