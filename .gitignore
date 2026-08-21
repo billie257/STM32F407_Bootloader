@@ -1,0 +1,31 @@
+# Visual Studio 编译输出
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.nupkg
+
+# 用户特定设置和临时文件
+.vs/
+*.user
+*.suo
+*.userprefs
+*.pidb
+*.dbmdl
+
+# 打包和发布目录
+packages/
+*.nupkg
+artifacts/
+
+# 日志和调试文件
+*.log
+*.tmp
+*.temp
+*.cachefile
+
+# 其他常见忽略
+Thumbs.db
+Desktop.ini
