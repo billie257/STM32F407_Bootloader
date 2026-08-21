@@ -14,16 +14,18 @@
             ],
             "includePath": [
                 "app/",
-                "app/crc",
                 "driver/bl_usart",
                 "driver/console",
                 "driver/tim_delay",
                 "driver/key",
                 "driver/led",
+                "driver/stm32flash",
                 "firmware/cmsis/core",
                 "firmware/cmsis/device",
                 "firmware/driver/inc",
-                "third_lib/ringbuffer"
+                "third_lib/ringbuffer",
+                "third_lib/crc",
+                "third_lib/easylogger"
             ],
             "intelliSenseMode": "windows-gcc-arm",
             "name": "stm32f407"

@@ -314,7 +314,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER,HSE_VALUE=8000000</Define>
               <Undefine></Undefine>
-              <IncludePath>..\app;..\app\crc;..\driver\led;..\driver\bl_usart;..\driver\console;..\driver\tim_delay;..\driver\key;..\firmware\cmsis\core;..\firmware\cmsis\device;..\firmware\driver\inc;..\third_lib\ringbuffer</IncludePath>
+              <IncludePath>..\app;..\driver\led;..\driver\bl_usart;..\driver\console;..\driver\tim_delay;..\driver\key;..\driver\stm32flash;..\firmware\cmsis\core;..\firmware\cmsis\device;..\firmware\driver\inc;..\third_lib\ringbuffer;..\third_lib\crc;..\third_lib\easylogger</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -405,29 +405,9 @@
               <FilePath>..\app\bootloader.c</FilePath>
             </File>
             <File>
-              <FileName>stm32_flash.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\app\stm32_flash.c</FilePath>
-            </File>
-            <File>
               <FileName>magic_header.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\app\magic_header.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>app/crc</GroupName>
-          <Files>
-            <File>
-              <FileName>crc16.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\app\crc\crc16.c</FilePath>
-            </File>
-            <File>
-              <FileName>crc32.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\app\crc\crc32.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -458,6 +438,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\driver\led\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\driver\stm32flash\stm32_flash.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -698,6 +683,46 @@
               <FileName>ringbuffer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\third_lib\ringbuffer\ringbuffer.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>third_lib/easylogger</GroupName>
+          <Files>
+            <File>
+              <FileName>elog.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\third_lib\easylogger\elog.c</FilePath>
+            </File>
+            <File>
+              <FileName>elog_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\third_lib\easylogger\elog_port.c</FilePath>
+            </File>
+            <File>
+              <FileName>elog_utils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\third_lib\easylogger\elog_utils.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>third_lib/crc</GroupName>
+          <Files>
+            <File>
+              <FileName>crc_poly.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\third_lib\crc\crc_poly.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\third_lib\crc\crc16.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\third_lib\crc\crc32.c</FilePath>
             </File>
           </Files>
         </Group>

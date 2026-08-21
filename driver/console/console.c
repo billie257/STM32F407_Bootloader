@@ -65,11 +65,11 @@ void console_init(uint32_t baundrate)
     uart_lowlevel_init(baundrate);
 }
 
-void console_write(const char str[])
+void console_write(const char str[], uint32_t length)
 {
-    while (*str != '\0') 
+    for (uint32_t i = 0; i < length; i++)
     {
         while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-        USART_SendData(USART1, *str++);
+        USART_SendData(USART1, str[i]);
     }
 }

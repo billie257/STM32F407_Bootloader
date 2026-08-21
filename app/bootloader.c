@@ -13,7 +13,9 @@
 #include "magic_header.h"
 #include "utils.h"
 
-#define printf(...)
+#define LOG_TAG          "boot"
+#define LOG_LVL          ELOG_LVL_INFO
+#include "elog.h"
 
 #define BL_VERSION       "v0.9.0"
 #define BL_ADDRESS       0x08000000
@@ -94,7 +96,7 @@ static bool application_validata(void)
 {
     if (!magic_header_validate())
     {
-        printf("magic header invalid\n");
+        log_e("magic header invalid\n");
         return false;
     }
 
@@ -104,7 +106,7 @@ static bool application_validata(void)
     uint32_t ccrc = crc32((uint8_t *)addr, size);
     if (crc != ccrc)
     {
-        printf("application crc error: expected %08X, got %08X\n", crc, ccrc);
+        log_e("application crc error: expected %08X, got %08X\n", crc, ccrc);
         return false;
     }
 
@@ -115,11 +117,11 @@ static void boot_application(void)
 {
     if (!application_validata())
     {
-        printf("application validate failed, cannot boot\n");
+        log_e("application validate failed, cannot boot\n");
         return;
     }
 
-    printf("booting application...\n");
+    log_w("booting application...\n");
     tim_delay_ms(2);
 
     led_off(led1);
@@ -156,11 +158,11 @@ static void bl_response(packet_opcode_t opcode, packet_errcode_t errcode, const 
 
 static void bl_opcode_inquery_handler(void)
 {
-    printf("inquery handler\n");
+    log_i("inquery handler\n");
 
     if (packet_payload_length != 1)
     {
-        printf("inquery packet length error\n");
+        log_e("inquery packet length error\n");
         return;
     }
 
@@ -182,7 +184,7 @@ static void bl_opcode_inquery_handler(void)
         }
         default:
         {
-            printf("unknown inquery subcode: %02X\n", subcode);
+            log_w("unknown inquery subcode: %02X\n", subcode);
             break;
         }        
     }
@@ -190,11 +192,11 @@ static void bl_opcode_inquery_handler(void)
 
 static void bl_opcode_erase_handler(void)
 {
-    printf("erase handler\n");
+    log_i("erase handler\n");
 
-    if (packet_payload_length != 8)
+    if (packet_payload_length != ADDR_SIZE_PARAM_LENGTH)
     {
-        printf("erase packet length error: %d\n", packet_payload_length);
+        log_e("erase packet length error: %d\n", packet_payload_length);
         bl_response(PACKET_OPCODE_ERASE, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
@@ -205,19 +207,19 @@ static void bl_opcode_erase_handler(void)
 
     if (address < STM32_FLASH_BASE || address + size > STM32_FLASH_BASE + STM32_FLASH_SIZE)
     {
-        printf("erase address=0x%08X, size=%u out of range\n", address, size);
+        log_e("erase address=0x%08X, size=%u out of range\n", address, size);
         bl_response(PACKET_OPCODE_ERASE, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
 
     if (address >= BL_ADDRESS && address < BL_ADDRESS + BL_SIZE)
     {
-        printf("address 0x%08X is protected\n", address);
+        log_e("address 0x%08X is protected\n", address);
         bl_response(PACKET_OPCODE_ERASE, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
 
-    printf("erase address=0x%08X, size=%u\n", address, size);
+    log_d("erase address=0x%08X, size=%u\n", address, size);
 
     stm32_flash_unlock();
     stm32_flash_erase(address, size);
@@ -228,11 +230,11 @@ static void bl_opcode_erase_handler(void)
 
 static void bl_opcode_program_handler(void)
 {
-    printf("program handler\n");
+    log_i("program handler\n");
 
-    if (packet_payload_length <= 0)
+    if (packet_payload_length <= ADDR_SIZE_PARAM_LENGTH)
     {
-        printf("program packet length error: %d\n", packet_payload_length);
+        log_e("program packet length error: %d\n", packet_payload_length);
         bl_response(PACKET_OPCODE_PROGRAM, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
@@ -244,26 +246,26 @@ static void bl_opcode_program_handler(void)
 
     if (address < STM32_FLASH_BASE || address + size > STM32_FLASH_BASE + STM32_FLASH_SIZE)
     {
-        printf("program address=0x%08X, size=%u out of range\n", address, size);
+        log_e("program address=0x%08X, size=%u out of range\n", address, size);
         bl_response(PACKET_OPCODE_PROGRAM, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
 
     if (address >= BL_ADDRESS && address < BL_ADDRESS + BL_SIZE)
     {
-        printf("address 0x%08X is protected\n", address);
+        log_e("address 0x%08X is protected\n", address);
         bl_response(PACKET_OPCODE_PROGRAM, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
 
-    if (size != packet_payload_length - 8)
+    if (size != packet_payload_length - ADDR_SIZE_PARAM_LENGTH)
     {
-        printf("program size %u does not match payload length %u\n", size, packet_payload_length - 8);
+        log_e("program size %u does not match payload length %u\n", size, packet_payload_length - ADDR_SIZE_PARAM_LENGTH);
         bl_response(PACKET_OPCODE_PROGRAM, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
 
-    printf("program address=0x%08X, size=%u\n", address, size);
+    log_i("program address=0x%08X, size=%u\n", address, size);
 
     stm32_flash_unlock();
     stm32_flash_program(address, data, size);
@@ -274,11 +276,11 @@ static void bl_opcode_program_handler(void)
 
 static void bl_opcode_verify_handler(void)
 {
-    printf("verify handler\n");
+    log_i("verify handler\n");
 
-    if (packet_payload_length != 12)
+    if (packet_payload_length != ADDR_SIZE_CRC_PARAM_LENGTH)
     {
-        printf("verify packet length error: %d\n", packet_payload_length);
+        log_e("verify packet length error: %d\n", packet_payload_length);
         bl_response(PACKET_OPCODE_VERIFY, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
@@ -290,18 +292,18 @@ static void bl_opcode_verify_handler(void)
 
     if (address < STM32_FLASH_BASE || address + size > STM32_FLASH_BASE + STM32_FLASH_SIZE)
     {
-        printf("program address=0x%08X, size=%u out of range\n", address, size);
+        log_e("program address=0x%08X, size=%u out of range\n", address, size);
         bl_response(PACKET_OPCODE_VERIFY, PACKET_ERRCODE_PARAM, NULL, 0);
         return;
     }
 
-    printf("verify address=0x%08X, size=%u, crc=0x%08X\n", address, size, crc);
+    log_d("verify address=0x%08X, size=%u, crc=0x%08X\n", address, size, crc);
 
     uint32_t ccrc = crc32((uint8_t *)address, size);
 
     if (ccrc != crc)
     {
-        printf("verify failed: expected 0x%08X, got 0x%08X\n", crc, ccrc);
+        log_e("verify failed: expected 0x%08X, got 0x%08X\n", crc, ccrc);
         bl_response(PACKET_OPCODE_VERIFY, PACKET_ERRCODE_VERIFY, NULL, 0);
         return;
     }
@@ -311,9 +313,9 @@ static void bl_opcode_verify_handler(void)
 
 static void bl_opcode_reset_handler(void)
 {
-    printf("reset handler\n");
+    log_i("reset handler\n");
     bl_response(PACKET_OPCODE_RESET, PACKET_ERRCODE_OK, NULL, 0);
-    printf("system resetting...\n");
+    log_w("system resetting...\n");
     tim_delay_ms(2);
 
     NVIC_SystemReset();
@@ -321,7 +323,7 @@ static void bl_opcode_reset_handler(void)
 
 static void bl_opcode_boot_handler(void)
 {
-    printf("boot handler\n");
+    log_i("boot handler\n");
     bl_response(PACKET_OPCODE_BOOT, PACKET_ERRCODE_OK, NULL, 0);
 
     boot_application();
@@ -350,7 +352,7 @@ static void bl_packet_handler(void)
         bl_opcode_boot_handler();
         break;
     default:
-        printf("Unknown command: %02X\n", packet_opcode);
+        log_w("Unknown command: %02X\n", packet_opcode);
         break;
     }
 }
@@ -365,13 +367,13 @@ static bool bl_byte_handler(uint8_t byte)
     if (now_ms - last_byte_ms > RX_TIMEOUT_MS)
     {
         if (packet_state != PACKET_STATE_HEADER)
-            printf("last packet rx timeout\n");
+            log_w("last packet rx timeout\n");
         packet_index = 0;
         packet_state = PACKET_STATE_HEADER;
     }
     last_byte_ms = now_ms;
 
-    //printf("recv: %02X\n", byte);
+    log_v("recv: %02X\n", byte);
 
     // 字节接收状态机处理
     packet_buffer[packet_index++] = byte;
@@ -380,12 +382,12 @@ static bool bl_byte_handler(uint8_t byte)
         case PACKET_STATE_HEADER:
             if (packet_buffer[PACKET_HEADER_OFFSET] == PACKET_HEADER_REQUEST)
             {
-                printf("header ok\n");
+                log_d("header ok\n");
                 packet_state = PACKET_STATE_OPCODE;
             }
             else
             {
-                printf("header error: %02X\n", packet_buffer[PACKET_HEADER_OFFSET]);
+                log_w("header error: %02X\n", packet_buffer[PACKET_HEADER_OFFSET]);
                 packet_index = 0;
                 packet_state = PACKET_STATE_HEADER;
             }
@@ -398,13 +400,13 @@ static bool bl_byte_handler(uint8_t byte)
                 packet_buffer[PACKET_OPCODE_OFFSET] == PACKET_OPCODE_RESET ||
                 packet_buffer[PACKET_OPCODE_OFFSET] == PACKET_OPCODE_BOOT)
                 {
-                    printf("opcode ok: %02X\n", packet_buffer[PACKET_OPCODE_OFFSET]);
+                    log_d("opcode ok: %02X\n", packet_buffer[PACKET_OPCODE_OFFSET]);
                     packet_opcode = (packet_opcode_t)packet_buffer[PACKET_OPCODE_OFFSET];
                     packet_state = PACKET_STATE_LENGTH;
                 }
             else
             {
-                printf("opcode error: %02X\n", packet_buffer[PACKET_OPCODE_OFFSET]);
+                log_w("opcode error: %02X\n", packet_buffer[PACKET_OPCODE_OFFSET]);
                 packet_index = 0;
                 packet_state = PACKET_STATE_HEADER;
             }
@@ -415,7 +417,7 @@ static bool bl_byte_handler(uint8_t byte)
                 uint16_t payload_length = get_u16(packet_buffer + PACKET_LENGTH_OFFSET);
                 if (payload_length <= PAYLOAD_SIZE_MAX)
                 {
-                    printf("length ok: %u\n", payload_length);
+                    log_d("length ok: %u\n", payload_length);
                     packet_payload_length = payload_length;
                     if (packet_payload_length > 0)
                         packet_state = PACKET_STATE_PAYLOAD;
@@ -424,7 +426,7 @@ static bool bl_byte_handler(uint8_t byte)
                 }
                 else
                 {
-                    printf("length error: %u\n", payload_length);
+                    log_w("length error: %u\n", payload_length);
                     packet_index = 0;
                     packet_state = PACKET_STATE_HEADER;
                 }
@@ -433,7 +435,7 @@ static bool bl_byte_handler(uint8_t byte)
         case PACKET_STATE_PAYLOAD:
             if (packet_index == PACKET_PAYLOAD_OFFSET + packet_payload_length)
             {
-                printf("payload receive ok\n");
+                log_d("payload receive ok\n");
                 packet_state = PACKET_STATE_CRC16;
             }
             break;
@@ -446,18 +448,14 @@ static bool bl_byte_handler(uint8_t byte)
                 if (crc == ccrc)
                 {
                     full_packet = true;
-                    printf("crc16 ok: %04X\n", crc);
-                    printf("packet received: opcode=%02X, lenght=%u\n", packet_opcode, packet_payload_length);
-                    // printf("payload: ");
-                    // for (uint32_t i = 0; i < packet_payload_length; i++)
-                    // {
-                    //     printf("%02X", packet_buffer[4 + i]);
-                    // }
-                    printf("\n");
+                    log_d("crc16 ok: %04X\n", crc);
+                    log_d("packet received: opcode=%02X, lenght=%u\n", packet_opcode, packet_payload_length);
+                    if (LOG_LVL >= ELOG_LVL_VERBOSE)
+                        elog_hexdump("payload", 16, packet_buffer, PACKET_MIN_SIZE + packet_payload_length);
                 }
                 else
                 {
-                    printf("crc16 error: expected %04X, got %04X\n", crc, ccrc);
+                    log_w("crc16 error: expected %04X, got %04X\n", crc, ccrc);
                 }
                 packet_index = 0;
                 packet_state = PACKET_STATE_HEADER;
@@ -483,7 +481,7 @@ static bool key_trap_check(void)
         if (!key_read(key2))
             return false;
     }
-    printf("key pressed, trap into boot\n");
+    log_w("key pressed, trap into boot\n");
     return true;
 }
 
@@ -491,13 +489,13 @@ bool magic_header_trap_boot(void)
 {
     if (!magic_header_validate())
     {
-        printf("magic header invalid, trap into boot\n");
+        log_w("magic header invalid, trap into boot\n");
         return true;
     }
 
     if (!application_validata())
     {
-        printf("application validate failed, trap into boot\n");
+        log_w("application validate failed, trap into boot\n");
         return true;
     }
 
@@ -529,7 +527,7 @@ bool rx_trap_boot(void)
         tim_delay_ms(10);
         if (!rb_empty(rxrb))
         {
-            printf("data received, trap into boot\n");
+            log_w("data received, trap into boot\n");
             return true;
         }
     }
@@ -540,7 +538,7 @@ bool rx_trap_boot(void)
 
 void bootloader_main(void)
 {
-    printf("Bootloader started.\n");
+    log_i("Bootloader started.\n");
 
     key_init(key2);
 
@@ -570,7 +568,7 @@ void bootloader_main(void)
     {
         if (key_press_check())
         {
-            printf("key pressed, rebooting...\n");
+            log_w("key pressed, rebooting...\n");
             tim_delay_ms(2);
             NVIC_SystemReset();
         }
