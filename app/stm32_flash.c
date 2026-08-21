@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "stm32f4xx.h"
+#include "utils.h"
+
+#define printf(...)
 
 #define FLASH_BASE_ADDRESS  0x08000000
 
@@ -40,7 +43,7 @@ void stm32_flash_erase(uint32_t address, uint32_t size)
 {
     uint32_t addr = FLASH_BASE_ADDRESS;
 
-    for (uint32_t i = 0; i < sizeof(sector_descs) / sizeof(sector_desc_t); i++)
+    for (uint32_t i = 0; i < ARRAY_SIZE(sector_descs); i++)
     {
         if (addr >= address && addr < address + size)
         {
